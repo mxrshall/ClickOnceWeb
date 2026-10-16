@@ -1,0 +1,39 @@
+name: Deploy ClickOnce to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest # ClickOnce vyžaduje Windows prostredie
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x' # Zmeňte na verziu .NET, ktorú používate (napr. 8.0, 9.0)
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # Publikovanie aplikácie pomocou vášho profilu (názvovite upravte cestu k .csproj a meno profilu)
+    - name: Publish ClickOnce App
+      run: |
+        dotnet publish CardReaderApp/CardReaderApp.csproj `
+          -c Release `
+          -p:PublishProfile=ClickOnceProfile
+
+    # Nahranie výstupu na GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: CardReaderApp/bin/Release/net8.0/publish/ # Skontrolujte si presnú cestu k výstupu podľa vášho .csproj
+        force_orphan: true
